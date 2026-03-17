@@ -66,7 +66,7 @@ button {
   margin: 0;
   font-size: clamp(2.3rem, 4vw, 4.6rem);
   line-height: 0.95;
-  max-width: 12ch;
+  max-width: 48ch;
   text-transform: uppercase;
 }
 

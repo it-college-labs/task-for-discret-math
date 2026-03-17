@@ -201,7 +201,7 @@ export default function App() {
   return (
     <main className="app-shell">
       <section className="hero">
-        <h1>Задача Дискр. мат</h1>
+        <h1>Задача Дискретная математика</h1>
         <p className="lead">
           Вводите числа, смотрите повороты и перекрашивания по шагам. Один источник истины
           для структуры и анимации приходит с сервера.
