@@ -77,7 +77,10 @@ async function request(path, options) {
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({ detail: "Request failed" }));
-    throw new Error(data.detail || "Request failed");
+    const error = new Error(data.detail || "Request failed");
+    error.payload = data;
+    error.status = response.status;
+    throw error;
   }
 
   return response.json();
@@ -108,12 +111,17 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [error, setError] = useState("");
   const [history, setHistory] = useState([]);
+  const [expandedLogKey, setExpandedLogKey] = useState(null);
   const timerRef = useRef(null);
 
   useEffect(() => {
     request("/tree/export")
-      .then((data) => setTree(data.tree))
-      .catch((err) => setError(err.message));
+      .then((data) => {
+        setTree(data.tree);
+      })
+      .catch((err) => {
+        setError(err.message);
+      });
   }, []);
 
   useEffect(() => {
@@ -171,12 +179,36 @@ export default function App() {
       setCurrentStepIndex(data.steps.length ? 0 : -1);
       setIsPlaying(data.steps.length > 0);
       setHistory((prev) => [
-        `insert ${data.insertedValue} -> ${data.steps.map((step) => step.type).join(", ")}`,
+        {
+          key: `insert-${Date.now()}`,
+          summary: `insert ${data.insertedValue} -> ${data.steps.map((step) => step.type).join(", ")}`,
+          raw: {
+            timestamp: new Date().toLocaleTimeString("ru-RU"),
+            method: "POST",
+            path: "/tree/insert",
+            status: 200,
+            payload: data,
+          },
+        },
         ...prev.slice(0, 5),
       ]);
       setInputValue("");
     } catch (err) {
       setError(err.message);
+      setHistory((prev) => [
+        {
+          key: `insert-error-${Date.now()}`,
+          summary: `insert ${parsed} -> error ${err.status || 500}`,
+          raw: {
+            timestamp: new Date().toLocaleTimeString("ru-RU"),
+            method: "POST",
+            path: "/tree/insert",
+            status: err.status || 500,
+            payload: err.payload || { detail: err.message },
+          },
+        },
+        ...prev.slice(0, 5),
+      ]);
     }
   }
 
@@ -190,9 +222,36 @@ export default function App() {
     try {
       const data = await request("/tree/reset", { method: "POST" });
       setTree(data.tree);
-      setHistory((prev) => ["reset", ...prev.slice(0, 5)]);
+      setHistory((prev) => [
+        {
+          key: `reset-${Date.now()}`,
+          summary: "reset",
+          raw: {
+            timestamp: new Date().toLocaleTimeString("ru-RU"),
+            method: "POST",
+            path: "/tree/reset",
+            status: 200,
+            payload: data,
+          },
+        },
+        ...prev.slice(0, 5),
+      ]);
     } catch (err) {
       setError(err.message);
+      setHistory((prev) => [
+        {
+          key: `reset-error-${Date.now()}`,
+          summary: `reset -> error ${err.status || 500}`,
+          raw: {
+            timestamp: new Date().toLocaleTimeString("ru-RU"),
+            method: "POST",
+            path: "/tree/reset",
+            status: err.status || 500,
+            payload: err.payload || { detail: err.message },
+          },
+        },
+        ...prev.slice(0, 5),
+      ]);
     }
   }
 
@@ -303,8 +362,24 @@ export default function App() {
         </div>
         <ul className="log-list">
           {history.length === 0 && <li>Лог пуст.</li>}
-          {history.map((item, index) => (
-            <li key={`${item}-${index}`}>{item}</li>
+          {history.map((item) => (
+            <li key={item.key} className="log-item">
+              <div className="log-row">
+                <span>{item.summary}</span>
+                <button
+                  type="button"
+                  className="log-detail-button"
+                  onClick={() =>
+                    setExpandedLogKey((prev) => (prev === item.key ? null : item.key))
+                  }
+                >
+                  {expandedLogKey === item.key ? "СКРЫТЬ JSON" : "ДЕТАЛИ"}
+                </button>
+              </div>
+              {expandedLogKey === item.key && (
+                <pre className="raw-entry">{JSON.stringify(item.raw, null, 2)}</pre>
+              )}
+            </li>
           ))}
         </ul>
       </section>

@@ -240,12 +240,41 @@ button:focus-visible,
   border-bottom: 3px solid var(--ink);
   text-transform: uppercase;
   min-height: 50px;
-  display: flex;
-  align-items: center;
 }
 
 .log-list li:last-child {
   border-bottom: 0;
+}
+
+.log-item {
+  display: grid;
+  gap: 10px;
+}
+
+.log-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.log-detail-button {
+  min-height: 40px;
+  padding: 0 12px;
+  flex-shrink: 0;
+}
+
+.raw-entry {
+  margin: 0;
+  padding: 14px;
+  border: 3px solid var(--ink);
+  background: #fff;
+  overflow: auto;
+  text-transform: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.84rem;
+  line-height: 1.45;
 }
 
 @media (max-width: 900px) {

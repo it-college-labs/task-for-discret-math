@@ -20,9 +20,4 @@ npm install
 npm run dev
 ```
 
-## Tests
 
-```bash
-cd backend
-python3 -m unittest discover -s tests
-```
